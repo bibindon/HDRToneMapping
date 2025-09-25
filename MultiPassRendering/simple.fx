@@ -1,6 +1,7 @@
 float4x4 g_matWorldViewProj;
 float4 g_lightNormal = { 0.3f, 1.0f, 0.5f, 0.0f };
 float3 g_ambient = { 0.3f, 0.3f, 0.3f };
+float g_lightBrightness = 10.0;
 
 bool g_bUseTexture = true;
 
@@ -23,7 +24,7 @@ void VertexShader1(in  float4 inPosition  : POSITION,
     outPosition = mul(inPosition, g_matWorldViewProj);
 
     float lightIntensity = dot(inNormal, g_lightNormal);
-    outDiffuse.rgb = max(0, lightIntensity) + g_ambient;
+    outDiffuse.rgb = (max(0, lightIntensity) + g_ambient) * g_lightBrightness;
     outDiffuse.a = 1.0f;
 
     outTexCood = inTexCood;

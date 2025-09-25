@@ -357,6 +357,10 @@ void RenderPass1()
     static float f = 0.0f;
     f += 0.025f;
 
+    float brightness = fmodf(f, 3.0);
+
+    hResult = g_pEffect1->SetFloat("g_lightBrightness", brightness);
+
     D3DXMATRIX mat;
     D3DXMATRIX View, Proj;
 
