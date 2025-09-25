@@ -37,8 +37,22 @@ void PixelShader1(in float4 inPosition    : POSITION,
     if (g_toneMapping)
     {
         // x / (1 + x) Reinhard(ラインハルト)のトーンマッピング
-        workColor = workColor / (1.0 + workColor);
-//        workColor = pow(workColor, 1.0 / 2.2);
+        // ラインハルトのトーンマッピングだと明るいところにしか圧縮がかからない。
+        // 平均輝度が1.0以下の場合は、暗いところに圧縮をかける
+        float brightness = workColor.r * 0.2 + workColor.g * 0.7 + workColor.b * 0.1;
+        
+        float4 workColor1 = workColor / (1.0 + workColor);
+        float4 workColor2 = workColor / g_brightMax;
+
+        float brightnessR = 1.0 - (1.0 / brightness);
+        if (brightnessR < 0.0)
+        {
+            workColor = workColor2;
+        }
+        else
+        {
+            workColor = (workColor1 * brightnessR) + (workColor2 * (1.0 - brightnessR));
+        }
     }
 
     outColor = saturate(workColor);

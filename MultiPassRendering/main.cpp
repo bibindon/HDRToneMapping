@@ -126,6 +126,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
 
             // 32-bit float で格納
             std::vector<float> pixelsRGBA32;
+            std::vector<float> brightnessList;
             {
                 // 1) レベル0サーフェスを取得
                 LPDIRECT3DSURFACE9 pSrc = NULL;
@@ -158,6 +159,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
 
                 // 取得先（必要に応じて保持先に）
                 pixelsRGBA32.resize(static_cast<size_t>(desc.Width) * desc.Height * 3);
+                brightnessList.resize(static_cast<size_t>(desc.Width) * desc.Height);
 
                 for (UINT y = 0; y < desc.Height; ++y)
                 {
@@ -177,6 +179,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                         pixelsRGBA32[i + 1] = rgba32[1]; // G
                         pixelsRGBA32[i + 2] = rgba32[2]; // B
                         // pixelsRGBA32[i + 3] = rgba32[3]; // A
+                        brightnessList.push_back(rgba32[0] * 0.2 + rgba32[1] * 0.7 + rgba32[2] * 0.1);
                     }
                 }
 
@@ -187,15 +190,15 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 pSys->Release();
                 pSrc->Release();
             }
-            auto min_ = *std::min_element(pixelsRGBA32.begin(), pixelsRGBA32.end());
-            auto max_ = *std::max_element(pixelsRGBA32.begin(), pixelsRGBA32.end());
+            auto min_ = *std::min_element(brightnessList.begin(), brightnessList.end());
+            auto max_ = *std::max_element(brightnessList.begin(), brightnessList.end());
 
             // HDRトーンマッピング、あり、なしの切り替え
             if (true)
             {
                 g_pEffect2->SetBool("g_toneMapping", TRUE);
-//                g_pEffect2->SetFloat("g_brightMin", min_);
-//                g_pEffect2->SetFloat("g_brightMax", max_);
+                g_pEffect2->SetFloat("g_brightMin", min_);
+                g_pEffect2->SetFloat("g_brightMax", max_);
             }
             else
             {
@@ -447,8 +450,8 @@ void RenderPass1()
     static float f = 0.0f;
     f += 0.025f;
 
-    float brightness = f * 50;
-    brightness = fmodf(brightness, 50);
+    float brightness = f * 5;
+    brightness = fmodf(brightness, 20);
 
     hResult = g_pEffect1->SetFloat("g_lightBrightness", brightness);
 
@@ -461,7 +464,7 @@ void RenderPass1()
                                1.0f,
                                10000.0f);
 
-    D3DXVECTOR3 vec1(5 * sinf(f), 3, -5 * cosf(f));
+    D3DXVECTOR3 vec1(3 * sinf(f), 2, -3 * cosf(f));
     D3DXVECTOR3 vec2(0, 0, 0);
     D3DXVECTOR3 vec3(0, 1, 0);
     D3DXMatrixLookAtLH(&View, &vec1, &vec2, &vec3);
