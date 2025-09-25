@@ -6,6 +6,7 @@ bool g_bUseTexture = true;
 
 float g_brightMin = 0.f;
 float g_brightMax = 1.f;
+bool g_toneMapping = true;
 
 texture texture1;
 sampler textureSampler = sampler_state {
@@ -33,14 +34,14 @@ void PixelShader1(in float4 inPosition    : POSITION,
     float4 workColor = (float4)0;
     workColor = tex2D(textureSampler, inTexCood);
 
-    workColor -= g_brightMin;
+    if (g_toneMapping)
+    {
+        // x / (1 + x) Reinhard(ラインハルト)のトーンマッピング
+        workColor = workColor / (1.0 + workColor);
+//        workColor = pow(workColor, 1.0 / 2.2);
+    }
 
-    // x / (1 + x) Reinhard(ラインハルト)のトーンマッピング
-    workColor = workColor / (1.0 + (g_brightMax - g_brightMin));
-    workColor = pow(workColor, 0.5);
-
-    outColor = workColor;
-    
+    outColor = saturate(workColor);
 }
 
 technique Technique1

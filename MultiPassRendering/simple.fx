@@ -24,6 +24,11 @@ void VertexShader1(in  float4 inPosition  : POSITION,
     outPosition = mul(inPosition, g_matWorldViewProj);
 
     float lightIntensity = dot(inNormal, g_lightNormal);
+    if (lightIntensity < 0)
+    {
+        lightIntensity = 0;
+    }
+
     outDiffuse.rgb = max(0, lightIntensity) * g_lightBrightness + g_ambient;
     outDiffuse.a = 1.0f;
 

@@ -193,13 +193,15 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
             // HDRトーンマッピング、あり、なしの切り替え
             if (true)
             {
-                g_pEffect2->SetFloat("g_brightMin", min_);
-                g_pEffect2->SetFloat("g_brightMax", max_);
+                g_pEffect2->SetBool("g_toneMapping", TRUE);
+//                g_pEffect2->SetFloat("g_brightMin", min_);
+//                g_pEffect2->SetFloat("g_brightMax", max_);
             }
             else
             {
-                g_pEffect2->SetFloat("g_brightMin", 0.f);
-                g_pEffect2->SetFloat("g_brightMax", 0.f);
+                g_pEffect2->SetBool("g_toneMapping", FALSE);
+//                g_pEffect2->SetFloat("g_brightMin", 0.f);
+//                g_pEffect2->SetFloat("g_brightMax", 0.f);
             }
 
             RenderPass2();
@@ -291,7 +293,16 @@ void InitD3D(HWND hWnd)
 
     LPD3DXBUFFER pD3DXMtrlBuffer = NULL;
 
-    hResult = D3DXLoadMeshFromX(_T("cube.x"),
+//    hResult = D3DXLoadMeshFromX(_T("cube.x"),
+//                                D3DXMESH_SYSTEMMEM,
+//                                g_pd3dDevice,
+//                                NULL,
+//                                &pD3DXMtrlBuffer,
+//                                NULL,
+//                                &g_dwNumMaterials,
+//                                &g_pMesh);
+
+    hResult = D3DXLoadMeshFromX(_T("sphere.blend.x"),
                                 D3DXMESH_SYSTEMMEM,
                                 g_pd3dDevice,
                                 NULL,
@@ -434,10 +445,10 @@ void RenderPass1()
     assert(hResult == S_OK);
 
     static float f = 0.0f;
-//    f = 0.2f;
     f += 0.025f;
 
-    float brightness = fmodf(f, 5.0);
+    float brightness = f * 50;
+    brightness = fmodf(brightness, 50);
 
     hResult = g_pEffect1->SetFloat("g_lightBrightness", brightness);
 
@@ -450,7 +461,7 @@ void RenderPass1()
                                1.0f,
                                10000.0f);
 
-    D3DXVECTOR3 vec1(10 * sinf(f), 5, -10 * cosf(f));
+    D3DXVECTOR3 vec1(5 * sinf(f), 3, -5 * cosf(f));
     D3DXVECTOR3 vec2(0, 0, 0);
     D3DXVECTOR3 vec3(0, 1, 0);
     D3DXMatrixLookAtLH(&View, &vec1, &vec2, &vec3);
