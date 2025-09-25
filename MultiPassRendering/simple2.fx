@@ -39,6 +39,7 @@ void PixelShader1(in float4 inPosition    : POSITION,
         // x / (1 + x) Reinhard(ラインハルト)のトーンマッピング
         // ラインハルトのトーンマッピングだと明るいところにしか圧縮がかからない。
         // 平均輝度が1.0以下の場合は、暗いところに圧縮をかける
+        // 1.0以上と以下で処理が変わるので多少の不自然さがある。可能なら修正したい
         float brightness = workColor.r * 0.2 + workColor.g * 0.7 + workColor.b * 0.1;
         
         float4 workColor1 = workColor / (1.0 + workColor);
