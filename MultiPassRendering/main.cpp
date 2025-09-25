@@ -190,6 +190,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
             auto min_ = *std::min_element(pixelsRGBA32.begin(), pixelsRGBA32.end());
             auto max_ = *std::max_element(pixelsRGBA32.begin(), pixelsRGBA32.end());
 
+            // HDRトーンマッピング、あり、なしの切り替え
             if (true)
             {
                 g_pEffect2->SetFloat("g_brightMin", min_);
@@ -432,7 +433,8 @@ void RenderPass1()
     hResult = g_pd3dDevice->SetRenderTarget(0, pRenderTarget);
     assert(hResult == S_OK);
 
-    static float f = 0.2f;
+    static float f = 0.0f;
+//    f = 0.2f;
     f += 0.025f;
 
     float brightness = fmodf(f, 5.0);

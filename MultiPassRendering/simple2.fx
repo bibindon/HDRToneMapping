@@ -34,7 +34,10 @@ void PixelShader1(in float4 inPosition    : POSITION,
     workColor = tex2D(textureSampler, inTexCood);
 
     workColor -= g_brightMin;
-    workColor = workColor / (1 + (g_brightMax - g_brightMin));
+
+    // x / (1 + x) Reinhard(ラインハルト)のトーンマッピング
+    workColor = workColor / (1.0 + (g_brightMax - g_brightMin));
+    workColor = pow(workColor, 0.5);
 
     outColor = workColor;
     
