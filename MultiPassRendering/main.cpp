@@ -123,6 +123,84 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
             Sleep(16);
 
             RenderPass1();
+
+            // 32-bit float で格納
+            std::vector<float> pixelsRGBA32;
+            {
+                // 1) レベル0サーフェスを取得
+                LPDIRECT3DSURFACE9 pSrc = NULL;
+                HRESULT hResult = g_pRenderTarget->GetSurfaceLevel(0, &pSrc);
+                assert(hResult == S_OK);
+
+                // 2) 同サイズ・同フォーマットの SYSTEMMEM サーフェスを作成
+                D3DSURFACE_DESC desc = {};
+                hResult = pSrc->GetDesc(&desc);
+                assert(hResult == S_OK);
+
+                LPDIRECT3DSURFACE9 pSys = NULL;
+                hResult = g_pd3dDevice->CreateOffscreenPlainSurface(
+                    desc.Width,
+                    desc.Height,
+                    desc.Format,            // = D3DFMT_A16B16G16R16F（InitD3Dで作成済み）
+                    D3DPOOL_SYSTEMMEM,
+                    &pSys,
+                    NULL);
+                assert(hResult == S_OK);
+
+                // 3) GPU→CPU にコピー
+                hResult = g_pd3dDevice->GetRenderTargetData(pSrc, pSys);
+                assert(hResult == S_OK);
+
+                // 4) SYSTEMMEM をロックして全画素を読む
+                D3DLOCKED_RECT lr = {};
+                hResult = pSys->LockRect(&lr, NULL, D3DLOCK_READONLY);
+                assert(hResult == S_OK);
+
+                // 取得先（必要に応じて保持先に）
+                pixelsRGBA32.resize(static_cast<size_t>(desc.Width) * desc.Height * 3);
+
+                for (UINT y = 0; y < desc.Height; ++y)
+                {
+                    const BYTE* row = static_cast<const BYTE*>(lr.pBits) + y * lr.Pitch;
+
+                    // A16B16G16R16F を 16bit 浮動小数×4 で読む
+                    const D3DXFLOAT16* h16 = reinterpret_cast<const D3DXFLOAT16*>(row);
+
+                    for (UINT x = 0; x < desc.Width; ++x)
+                    {
+                        float rgba32[4];
+                        // Half→Float 変換（d3dx9 付属ユーティリティ）
+                        D3DXFloat16To32Array(rgba32, &h16[x * 4], 4);
+
+                        const size_t i = (static_cast<size_t>(y) * desc.Width + x) * 3;
+                        pixelsRGBA32[i + 0] = rgba32[0]; // R
+                        pixelsRGBA32[i + 1] = rgba32[1]; // G
+                        pixelsRGBA32[i + 2] = rgba32[2]; // B
+                        // pixelsRGBA32[i + 3] = rgba32[3]; // A
+                    }
+                }
+
+                hResult = pSys->UnlockRect();
+                assert(hResult == S_OK);
+
+                // 5) 後片付け
+                pSys->Release();
+                pSrc->Release();
+            }
+            auto min_ = *std::min_element(pixelsRGBA32.begin(), pixelsRGBA32.end());
+            auto max_ = *std::max_element(pixelsRGBA32.begin(), pixelsRGBA32.end());
+
+            if (true)
+            {
+                g_pEffect2->SetFloat("g_brightMin", min_);
+                g_pEffect2->SetFloat("g_brightMax", max_);
+            }
+            else
+            {
+                g_pEffect2->SetFloat("g_brightMin", 0.f);
+                g_pEffect2->SetFloat("g_brightMax", 0.f);
+            }
+
             RenderPass2();
         }
 
@@ -149,7 +227,7 @@ void TextDraw(LPD3DXFONT pFont, TCHAR* text, int X, int Y)
                                       -1,
                                       &rect,
                                       DT_LEFT | DT_NOCLIP,
-                                      D3DCOLOR_ARGB(255, 0, 0, 0));
+                                      D3DCOLOR_ARGB(255, 128, 128, 128));
 
     assert((int)hResult >= 0);
 }
@@ -305,9 +383,9 @@ void InitD3D(HWND hWnd)
     hResult = D3DXCreateTexture(g_pd3dDevice,
                                 640,
                                 480,
-                                1,
+                                D3DX_DEFAULT,
                                 D3DUSAGE_RENDERTARGET,
-                                D3DFMT_A16B16G16R16,
+                                D3DFMT_A16B16G16R16F,
                                 D3DPOOL_DEFAULT,
                                 &g_pRenderTarget);
     assert(hResult == S_OK);
@@ -354,10 +432,10 @@ void RenderPass1()
     hResult = g_pd3dDevice->SetRenderTarget(0, pRenderTarget);
     assert(hResult == S_OK);
 
-    static float f = 0.0f;
+    static float f = 0.2f;
     f += 0.025f;
 
-    float brightness = fmodf(f, 4.0);
+    float brightness = fmodf(f, 5.0);
 
     hResult = g_pEffect1->SetFloat("g_lightBrightness", brightness);
 
@@ -392,9 +470,9 @@ void RenderPass1()
     hResult = g_pd3dDevice->BeginScene();
     assert(hResult == S_OK);
 
-    TCHAR msg[100];
-    _tcscpy_s(msg, 100, _T("HDRトーンマッピングに挑戦"));
-    TextDraw(g_pFont, msg, 0, 0);
+    //TCHAR msg[100];
+    //_tcscpy_s(msg, 100, _T("HDRトーンマッピングに挑戦"));
+    //TextDraw(g_pFont, msg, 0, 0);
 
     hResult = g_pEffect1->SetTechnique("Technique1");
     assert(hResult == S_OK);

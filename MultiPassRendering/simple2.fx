@@ -4,6 +4,9 @@ float3 g_ambient = { 0.3f, 0.3f, 0.3f };
 
 bool g_bUseTexture = true;
 
+float g_brightMin = 0.f;
+float g_brightMax = 1.f;
+
 texture texture1;
 sampler textureSampler = sampler_state {
     Texture = (texture1);
@@ -30,9 +33,8 @@ void PixelShader1(in float4 inPosition    : POSITION,
     float4 workColor = (float4)0;
     workColor = tex2D(textureSampler, inTexCood);
 
-    float average = (workColor.r + workColor.g + workColor.b) / 3;
-
-    workColor = saturate(workColor);
+    workColor -= g_brightMin;
+    workColor = workColor / (1 + (g_brightMax - g_brightMin));
 
     outColor = workColor;
     
