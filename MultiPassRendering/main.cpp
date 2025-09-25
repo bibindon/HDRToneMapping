@@ -357,7 +357,7 @@ void RenderPass1()
     static float f = 0.0f;
     f += 0.025f;
 
-    float brightness = fmodf(f, 3.0);
+    float brightness = fmodf(f, 4.0);
 
     hResult = g_pEffect1->SetFloat("g_lightBrightness", brightness);
 
