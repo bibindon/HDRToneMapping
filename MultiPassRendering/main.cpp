@@ -307,7 +307,7 @@ void InitD3D(HWND hWnd)
                                 480,
                                 1,
                                 D3DUSAGE_RENDERTARGET,
-                                D3DFMT_A8R8G8B8,
+                                D3DFMT_A16B16G16R16,
                                 D3DPOOL_DEFAULT,
                                 &g_pRenderTarget);
     assert(hResult == S_OK);
@@ -393,7 +393,7 @@ void RenderPass1()
     assert(hResult == S_OK);
 
     TCHAR msg[100];
-    _tcscpy_s(msg, 100, _T("SSAOに挑戦"));
+    _tcscpy_s(msg, 100, _T("HDRトーンマッピングに挑戦"));
     TextDraw(g_pFont, msg, 0, 0);
 
     hResult = g_pEffect1->SetTechnique("Technique1");
